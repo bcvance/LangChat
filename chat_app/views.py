@@ -1,4 +1,10 @@
 from django.shortcuts import render
+from queue import Queue
+
+rus_speakers = Queue()
+span_speakers = Queue()
+eng_speakers = Queue()
+germ_speakers = Queue()
 
 # Create your views here.
 def index(request):
