@@ -1,6 +1,9 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import async_to_sync
+from channels.db import database_sync_to_async
+from .models import TempUser
+from django.db.models.base import ObjectDoesNotExist
+import threading
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -42,7 +45,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
 
     async def disconnect(self, close_code):
+        self.thread = threading.Thread(target=self.delete_users)
+        self.thread.start()
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
+        del self.thread
+
+    def delete_users(self):
+        if TempUser.objects.get(id = self.scope["session"]["temp_user_id"]):
+            TempUser.objects.get(id = self.scope["session"]["temp_user_id"]).delete()
